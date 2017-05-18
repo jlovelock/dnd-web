@@ -1,0 +1,20 @@
+{
+  "name": "dnd-web",
+  "version": "0.0.1",
+  "description": "Play single-player D&D 5e online.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest"
+  },
+  "author": "Jessica Lovelock",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.3",
+    "react": "^15.5.4",
+    "react-redux": "^5.0.4"
+  },
+  "devDependencies": {
+    "jest": "^20.0.3"
+  }
+}

@@ -1,5 +1,6 @@
 import {
-  StatSelector
+  StatSelector,
+  PointBuyManager,
 } from './stat-selector';
 
 import { shallow } from 'enzyme';
@@ -18,23 +19,19 @@ describe('stat selector', () => {
     it('can instantiate', () => {
       expect(sut).toBeDefined();
     });
-    it('stat defaults to 10', () => {
-      expect(sut.state.score).toEqual(10);
+    it('stat defaults to 8', () => {
+      expect(sut.state.score).toEqual(8);
     });
   });
 
   describe('modifying score', () => {
-    it('can increment once', () => {
+    it('can increment and decrement', () => {
       sut.increment();
-      expect(sut.state.score).toEqual(11);
-    });
-    it('can decrement once', () => {
-      sut.decrement();
       expect(sut.state.score).toEqual(9);
+      sut.decrement();
+      expect(sut.state.score).toEqual(8);
     });
-
     it('enforces a minimum score of 8', () => {
-      expect(sut.canDecrement()).toEqual(true);
       while(sut.state.score != 8){
         sut.decrement();
       }
@@ -53,3 +50,18 @@ describe('stat selector', () => {
     })
   });
 });
+
+describe('point buy manager', () => {
+  let sut;
+  beforeEach(() => {
+    sut = shallow(
+      <PointBuyManager />
+    ).instance();
+  })
+  it('can instantiate', () => {
+    expect(sut).toBeDefined();
+  })
+  it('starts with 27 points available', () => {
+    expect(sut.state.availablePoints).toEqual(27);
+  })
+})

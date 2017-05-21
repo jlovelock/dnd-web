@@ -4,7 +4,7 @@ const app = express();
 const port = 3001;
 
 app.get('/', function (req, res) {
-  res.send('Hello World')
+  res.send('Express server is running on this port.')
 });
 
 app.get('/testEndpoint', function (req, res) {

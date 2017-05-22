@@ -8,60 +8,122 @@ import React from 'react';
 
 describe('stat selector', () => {
   let sut;
-
-  beforeEach(() => {
-    sut = shallow(
-      <StatSelector />
-    ).instance();
-  })
-
   describe('basic usage', () => {
+    beforeEach(() => {
+      sut = shallow(
+        <StatSelector />
+      ).instance();
+    })
+
     it('can instantiate', () => {
       expect(sut).toBeDefined();
     });
-    it('stat defaults to 8', () => {
-      expect(sut.state.score).toEqual(8);
+    it('starting score defaults to 8', () => {
+      expect(sut.props.score).toEqual(8);
     });
+    it('min score defaults to 8', () => {
+      expect(sut.props.minScore).toEqual(8);
+    })
+    it('max score defaults to 15', () => {
+      expect(sut.props.maxScore).toEqual(15);
+    })
   });
 
   describe('modifying score', () => {
-    it('can increment and decrement', () => {
-      sut.increment();
-      expect(sut.state.score).toEqual(9);
-      sut.decrement();
-      expect(sut.state.score).toEqual(8);
+    let onScoreChanged = jest.fn();
+    let sutWrapper;
+    let incrementBtn, decrementBtn;
+    beforeEach(() => {
+      sutWrapper = shallow(
+        <StatSelector
+          score={10}
+          onScoreChanged={onScoreChanged}
+        />
+      );
+      sut = sutWrapper.instance();
+      decrementBtn = () => sutWrapper.find('button').at(0);
+      incrementBtn = () => sutWrapper.find('button').at(1);
+    })
+
+    it('clicking the + button calls onScoreChanged with +1 to score', () => {
+      let mockIncrement = jest.fn();
+      sut.increment = mockIncrement;
+      incrementBtn().simulate('click');
+      expect(onScoreChanged).toHaveBeenCalledWith(11);
     });
-    it('enforces a minimum score of 8', () => {
-      while(sut.state.score != 8){
-        sut.decrement();
-      }
-      expect(sut.canDecrement()).toEqual(false);
-      sut.decrement();
-      expect(sut.state.score).toEqual(8);
+    it('clicking the - button calls onScoreChanged with -1 to score', () => {
+      let mockDecrement = jest.fn();
+      sut.decrement = mockDecrement;
+      decrementBtn().simulate('click');
+      expect(onScoreChanged).toHaveBeenCalledWith(9);
     })
-    it('enforces a maximum score of 15', () => {
-      expect(sut.canIncrement()).toEqual(true);
-      while(sut.state.score != 15){
-        sut.increment();
-      }
-      expect(sut.canIncrement()).toEqual(false);
-      sut.increment();
-      expect(sut.state.score).toEqual(15);
-    })
+    it('disables increment button at max score', () => {
+      expect(incrementBtn().is('[disabled]')).toBe(false);
+      sutWrapper.setProps({score: 15});
+      expect(incrementBtn().is('[disabled]')).toBe(true);
+    });
+    it('disables decrement button at min score', () => {
+      expect(decrementBtn().is('[disabled]')).toBe(false);
+      sutWrapper.setProps({score: 8});
+      expect(decrementBtn().is('[disabled]')).toBe(true);
+    });
   });
 });
 
 describe('point buy manager', () => {
-  let sut;
+  let sut, sutWrapper;
+  const pointBuyCosts = {
+    8:  0,
+    9:  1,
+    10: 2,
+    11: 3,
+    12: 4,
+    13: 5,
+    14: 7,
+    15: 9
+  };
+  const defaultScores = {
+    STR: 8,
+    DEX: 8,
+    CON: 8,
+    INT: 8,
+    WIS: 8,
+    CHA: 8
+  };
   beforeEach(() => {
-    sut = shallow(
+    sutWrapper = shallow(
       <PointBuyManager />
-    ).instance();
+    );
+    sut = sutWrapper.instance()
   })
   it('can instantiate', () => {
     expect(sut).toBeDefined();
   })
   it('starts with 27 points available', () => {
-    expect(sut.state.availablePoints).toEqual(27);
+    expect(sut._getAvailablePoints()).toEqual(27);
+  })
+
+  it('subtracts off individual stat point buy costs from total pool when one stat is changed', () => {
+    for(let statValue in pointBuyCosts) {
+      sutWrapper.setState({
+        scores: {
+          ...defaultScores,
+          STR: statValue
+        }
+      });
+      expect(sut._getAvailablePoints()).toEqual(27-pointBuyCosts[statValue]);
+    }
+  })
+  it('subtracts off all stat point buy costs when multiple stats are changed', () => {
+    for(let statValue in pointBuyCosts) {
+      sutWrapper.setState({
+        scores: {
+          ...defaultScores,
+          STR: statValue,
+          DEX: statValue
+        }
+      });
+      expect(sut._getAvailablePoints()).toEqual(27-2*pointBuyCosts[statValue]);
+    }
   })
 })

@@ -1,54 +1,14 @@
 import React, {Component} from 'react';
 
- const MIN_SCORE = 8;
- const MAX_SCORE = 15;
-
- const pointBuyCosts = {
-   8:  0,
-   9:  1,
-   10: 2,
-   11: 3,
-   12: 4,
-   13: 5,
-   14: 7,
-   15: 9
- };
-
  /*
   * Helper class for point buy.
   */
 export class StatSelector extends Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      score: 8
-    };
-  }
-
-  canDecrement = () => { return this.state.score > MIN_SCORE; }
-  canIncrement = () => { return this.state.score < MAX_SCORE; }
-
   decrement = () => {
-    if(this.canDecrement()) {
-      this.props.onPointBuyValueChanged(
-        pointBuyCosts[this.state.score-1] - pointBuyCosts[this.state.score]
-      );
-      this.setState({
-        score: this.state.score - 1
-      });
-
-    }
-
+      this.props.onScoreChanged(this.props.score-1);
   }
   increment = () => {
-    if(this.canIncrement()) {
-      this.props.onPointBuyValueChanged(
-        pointBuyCosts[this.state.score+1] - pointBuyCosts[this.state.score]
-      );
-      this.setState({
-        score: this.state.score + 1
-      });
-    }
+    this.props.onScoreChanged(this.props.score+1);
   }
 
   _buildButtonOpts = (isIncrementing) => {
@@ -56,7 +16,7 @@ export class StatSelector extends Component {
       "style": {backgroundColor: "white"},
       "onClick": isIncrementing ? this.increment : this.decrement
     };
-    if(isIncrementing ? !this.canIncrement() : !this.canDecrement() ) {
+    if(isIncrementing ? this.props.score >= this.props.maxScore : this.props.score <= this.props.minScore ) {
       opts['disabled'] = 'true';
       opts['style']['opacity'] = '0.75';
     }
@@ -66,7 +26,7 @@ export class StatSelector extends Component {
   render() {
     return (
       <div>
-        <text style={{marginRight: "10px"}}>{this.props.name}: {this.state.score}</text>
+        <text style={{marginRight: "10px"}}>{this.props.name}: {this.props.score}</text>
 
         <button {...this._buildButtonOpts(false)}>
           <text>-</text>
@@ -75,60 +35,99 @@ export class StatSelector extends Component {
         <button {...this._buildButtonOpts(true)}>
           <text>+</text>
         </button>
-
       </div>
     );
   }
 }
 
 StatSelector.defaultProps = {
-  onPointBuyValueChanged: pointBuyDifference => {}
-}
+  onScoreChanged: (score) => {},
+  score: 8,
+  minScore: 8,
+  maxScore: 15
+};
+
+
 
 const stats = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+const pointBuyCosts = {
+  8:  0,
+  9:  1,
+  10: 2,
+  11: 3,
+  12: 4,
+  13: 5,
+  14: 7,
+  15: 9
+};
 
 export class PointBuyManager extends Component {
   constructor(props){
     super(props);
     this.state = {
-      availablePoints: 27
+      scores: {}
     };
 
-    this.selectors = []
-    for(let statName of stats) {
-      this.selectors.push(
-        <StatSelector
-        name={statName}
-        key={statName}
-        onPointBuyValueChanged={this._updatePointBuy}
-      />);
+    for(let stat in stats){
+      this.state.scores[stat] = this.props.defaultScore;
     }
+
   }
 
-  _updatePointBuy = (pointBuyDifference) => {
-    this.setState({
-      availablePoints: this.state.availablePoints - pointBuyDifference
-    });
+  _getAvailablePoints = () => {
+    let availablePoints = 27;
+    for(let stat in this.state.scores) {
+      availablePoints -= pointBuyCosts[this.state.scores[stat]];
+    }
+    return availablePoints;
   }
 
-  _getPBStyle = () => {
+  _updatePointBuy = (statName, scoreValue) => {
+    let newScoresObj = {...this.state.scores}
+    newScoresObj[statName] = scoreValue;
+    this.setState({scores: newScoresObj});
+  }
+
+  _getPBStyle = (availablePoints) => {
     let style = {}
-    if (this.state.availablePoints < 0) {
+    if (availablePoints < 0) {
       style['color'] = 'red';
+      style['fontWeight'] = 'bold';
+    } else if (availablePoints == 0) {
+      style['color'] = 'limegreen';
       style['fontWeight'] = 'bold';
     }
     return style;
   }
 
+  _getSelectors() {
+    let selectors = []
+    for(let statName of stats) {
+      selectors.push(
+        <StatSelector
+        name={statName}
+        key={statName}
+        score={this.state.scores[statName]}
+        onScoreChanged={this._updatePointBuy.bind(this, statName)}
+      />);
+    }
+    return selectors;
+  }
+
   render() {
+    const availablePoints = this._getAvailablePoints();
     return (
       <div>
         <div style={{marginBottom: "10px"}}>
           <text>Available points: </text>
-          <text style={this._getPBStyle()}>{this.state.availablePoints}</text>
+          <text style={this._getPBStyle(availablePoints)}>{availablePoints}</text>
         </div>
-        {this.selectors}
+        {this._getSelectors()}
       </div>
     );
   }
 }
+
+PointBuyManager.defaultProps = {
+  defaultScore: 8
+};

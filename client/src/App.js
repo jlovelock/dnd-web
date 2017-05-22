@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+import {PointBuyManager} from './stat-selector';
 
 class App extends Component {
   state = {data: ":("};
@@ -15,7 +16,7 @@ class App extends Component {
     return (
       <div className="App">
         <div className="App-header">
-          <h2>{this.state.data}</h2>
+          <PointBuyManager />
         </div>
       </div>
     );

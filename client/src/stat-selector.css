@@ -1,0 +1,21 @@
+button:disabled {
+  opacity: 0.75;
+}
+
+.stat-selector-textbox {
+  margin-right: 10px;
+}
+
+.pb-mgr-availpts-negative {
+  color: red;
+  font-weight: bold;
+}
+
+.pb-mgr-availpts-zero {
+  color: limegreen;
+  font-weight: bold;
+}
+
+.pb-mgr-availpts-positive {
+
+}

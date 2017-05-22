@@ -126,4 +126,62 @@ describe('point buy manager', () => {
       expect(sut._getAvailablePoints()).toEqual(27-2*pointBuyCosts[statValue]);
     }
   })
+  describe('available points field styling', () => {
+    let availablePointsField;
+    beforeEach(() => {
+      sutWrapper = shallow(
+        <PointBuyManager />
+      );
+      sut = sutWrapper.instance();
+      availablePointsField = () => sutWrapper.find('text').at(1)
+    })
+    it('has pb-mgr-availpts-positive class when available points > 0', () => {
+      sutWrapper.setState({
+        scores: {
+          STR: 8,
+          DEX: 8,
+          CON: 8,
+          INT: 8,
+          WIS: 8,
+          CHA: 8
+        }
+      });
+      expect(sut._getAvailablePoints()).toBeGreaterThan(0);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-positive')).toBe(true);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-zero')).toBe(false);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-negative')).toBe(false);
+    })
+    it('has pb-mgr-availpts-zero class when available points == 0', () => {
+      sutWrapper.setState({
+        scores: {
+          STR: 15,
+          DEX: 15,
+          CON: 15,
+          INT: 8,
+          WIS: 8,
+          CHA: 8
+        }
+      });
+      expect(sut._getAvailablePoints()).toEqual(0);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-positive')).toBe(false);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-zero')).toBe(true);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-negative')).toBe(false);
+    });
+    it('has pb-mgr-availpts-negative class when available points < 0', () => {
+      sutWrapper.setState({
+        scores: {
+          STR: 15,
+          DEX: 15,
+          CON: 15,
+          INT: 15,
+          WIS: 15,
+          CHA: 15
+        }
+      });
+      expect(sut._getAvailablePoints()).toBeLessThan(0);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-positive')).toBe(false);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-zero')).toBe(false);
+      expect(availablePointsField().hasClass('pb-mgr-availpts-negative')).toBe(true);
+    })
+  })
 })

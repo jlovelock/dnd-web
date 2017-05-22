@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-
+import './stat-selector.css';
  /*
   * Helper class for point buy.
   */
@@ -18,7 +18,6 @@ export class StatSelector extends Component {
     };
     if(isIncrementing ? this.props.score >= this.props.maxScore : this.props.score <= this.props.minScore ) {
       opts['disabled'] = 'true';
-      opts['style']['opacity'] = '0.75';
     }
     return opts;
   }
@@ -26,7 +25,7 @@ export class StatSelector extends Component {
   render() {
     return (
       <div>
-        <text style={{marginRight: "10px"}}>{this.props.name}: {this.props.score}</text>
+        <text className="stat-selector-textbox">{this.props.name}: {this.props.score}</text>
 
         <button {...this._buildButtonOpts(false)}>
           <text>-</text>
@@ -64,13 +63,14 @@ const pointBuyCosts = {
 export class PointBuyManager extends Component {
   constructor(props){
     super(props);
-    this.state = {
-      scores: {}
-    };
 
+    let scores = {}
     for(let stat in stats){
-      this.state.scores[stat] = this.props.defaultScore;
+      scores[stat] = this.props.defaultScore;
     }
+    this.state = {
+      scores: scores
+    };
 
   }
 
@@ -89,15 +89,12 @@ export class PointBuyManager extends Component {
   }
 
   _getPBStyle = (availablePoints) => {
-    let style = {}
-    if (availablePoints < 0) {
-      style['color'] = 'red';
-      style['fontWeight'] = 'bold';
-    } else if (availablePoints == 0) {
-      style['color'] = 'limegreen';
-      style['fontWeight'] = 'bold';
-    }
-    return style;
+    if(availablePoints < 0)
+      return 'pb-mgr-availpts-negative';
+    else if(availablePoints === 0)
+      return 'pb-mgr-availpts-zero';
+    else
+      return 'pb-mgr-availpts-positive';
   }
 
   _getSelectors() {
@@ -120,7 +117,7 @@ export class PointBuyManager extends Component {
       <div>
         <div style={{marginBottom: "10px"}}>
           <text>Available points: </text>
-          <text style={this._getPBStyle(availablePoints)}>{availablePoints}</text>
+          <text className={this._getPBStyle(availablePoints)}>{availablePoints}</text>
         </div>
         {this._getSelectors()}
       </div>

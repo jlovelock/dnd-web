@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import './stat-selector.css';
  /*
   * Helper class for point buy.
@@ -25,7 +26,20 @@ export class StatSelector extends Component {
   render() {
     return (
       <div>
-        <text className="stat-selector-textbox">{this.props.name}: {this.props.score}</text>
+        <text className="stat-selector-textbox">{this.props.name}: </text>
+        <input
+          value={this.props.score}
+          onChange={evt => {
+            let newValue = evt.target.value | 0
+            newValue = Math.max(newValue, this.props.minScore);
+            newValue = Math.min(newValue, this.props.maxScore)
+            this.props.onScoreChanged(newValue)
+          }}
+          style={{
+            width: "20px",
+            marginRight: "10px"
+          }}
+        />
 
         <button {...this._buildButtonOpts(false)}>
           <text>-</text>
@@ -37,6 +51,13 @@ export class StatSelector extends Component {
       </div>
     );
   }
+}
+
+StatSelector.propTypes = {
+  onScoreChanged: PropTypes.function,
+  score: PropTypes.number,
+  maxScore: PropTypes.number,
+  minScore: PropTypes.number
 }
 
 StatSelector.defaultProps = {
@@ -65,17 +86,16 @@ export class PointBuyManager extends Component {
     super(props);
 
     let scores = {}
-    for(let stat in stats){
+    for(let stat of stats){
       scores[stat] = this.props.defaultScore;
     }
     this.state = {
       scores: scores
     };
-
   }
 
   _getAvailablePoints = () => {
-    let availablePoints = 27;
+    let availablePoints = this.props.pointBuyAllotment;
     for(let stat in this.state.scores) {
       availablePoints -= pointBuyCosts[this.state.scores[stat]];
     }
@@ -83,9 +103,13 @@ export class PointBuyManager extends Component {
   }
 
   _updatePointBuy = (statName, scoreValue) => {
-    let newScoresObj = {...this.state.scores}
-    newScoresObj[statName] = scoreValue;
-    this.setState({scores: newScoresObj});
+    this.setState({
+      scores: {
+        ...this.state.scores,
+        [statName]: scoreValue
+      }
+    });
+    this.props.onStatChange && this.props.onStatChange(statName, scoreValue);
   }
 
   _getPBStyle = (availablePoints) => {
@@ -102,23 +126,34 @@ export class PointBuyManager extends Component {
     for(let statName of stats) {
       selectors.push(
         <StatSelector
-        name={statName}
-        key={statName}
-        score={this.state.scores[statName]}
-        onScoreChanged={this._updatePointBuy.bind(this, statName)}
-      />);
+          name={statName}
+          key={statName}
+          score={this.state.scores[statName]}
+          minScore={this.props.minScore}
+          maxScore={this.props.maxScore}
+          onScoreChanged={this._updatePointBuy.bind(this, statName)}
+        />
+      );
     }
     return selectors;
   }
 
-  render() {
+  _renderAvailablePoints() {
+    if(!this.props.pointBuyAllotment) return null;
+
     const availablePoints = this._getAvailablePoints();
     return (
+      <div style={{marginBottom: "10px"}}>
+        <text>Available points: </text>
+        <text className={this._getPBStyle(availablePoints)}>{availablePoints}</text>
+      </div>
+    );
+  }
+
+  render() {
+    return (
       <div>
-        <div style={{marginBottom: "10px"}}>
-          <text>Available points: </text>
-          <text className={this._getPBStyle(availablePoints)}>{availablePoints}</text>
-        </div>
+        {this._renderAvailablePoints()}
         {this._getSelectors()}
       </div>
     );
@@ -126,5 +161,28 @@ export class PointBuyManager extends Component {
 }
 
 PointBuyManager.defaultProps = {
-  defaultScore: 8
+  defaultScore: 8,
+  minScore: 8,
+  maxScore: 15
+};
+
+PointBuyManager.propTypes = {
+  defaultScore: PropTypes.number,
+  minScore: PropTypes.number,
+  maxScore: PropTypes.number,
+
+  /**
+   * The maximum number of points available to spend.
+   * When unset, the "Available points:" header is
+   *   not displayed.
+   */
+  pointBuyAllotment: PropTypes.number,
+
+  /**
+   * @param statName: one of STR, DEX, CON, INT, WIS, CHA
+   * @param scoreValue: the new value
+   * optional callback function; values are also maintained in
+   *   local component state.
+   */
+  onStatChange: PropTypes.function
 };

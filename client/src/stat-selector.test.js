@@ -90,17 +90,19 @@ describe('point buy manager', () => {
     WIS: 8,
     CHA: 8
   };
+  const PB_ALLOTMENT = 27;
   beforeEach(() => {
     sutWrapper = shallow(
-      <PointBuyManager />
+      <PointBuyManager
+        pointBuyAllotment={PB_ALLOTMENT}
+        minScore={8}
+        maxScore={15}
+      />
     );
     sut = sutWrapper.instance()
   })
   it('can instantiate', () => {
     expect(sut).toBeDefined();
-  })
-  it('starts with 27 points available', () => {
-    expect(sut._getAvailablePoints()).toEqual(27);
   })
 
   it('subtracts off individual stat point buy costs from total pool when one stat is changed', () => {
@@ -111,7 +113,7 @@ describe('point buy manager', () => {
           STR: statValue
         }
       });
-      expect(sut._getAvailablePoints()).toEqual(27-pointBuyCosts[statValue]);
+      expect(sut._getAvailablePoints()).toEqual(PB_ALLOTMENT-pointBuyCosts[statValue]);
     }
   })
   it('subtracts off all stat point buy costs when multiple stats are changed', () => {
@@ -123,15 +125,12 @@ describe('point buy manager', () => {
           DEX: statValue
         }
       });
-      expect(sut._getAvailablePoints()).toEqual(27-2*pointBuyCosts[statValue]);
+      expect(sut._getAvailablePoints()).toEqual(PB_ALLOTMENT-2*pointBuyCosts[statValue]);
     }
   })
   describe('available points field styling', () => {
     let availablePointsField;
     beforeEach(() => {
-      sutWrapper = shallow(
-        <PointBuyManager />
-      );
       sut = sutWrapper.instance();
       availablePointsField = () => sutWrapper.find('text').at(1)
     })
